@@ -18,7 +18,17 @@ output "vpc_id" {
   value       = aws_vpc.main.id
 }
 
+output "security_group_id" {
+  description = "ID of the security group"
+  value       = aws_security_group.app_sg.id
+}
+
 output "ssh_command" {
   description = "SSH command to connect to the instance"
-  value       = "ssh -i /path/to/your/key.pem ubuntu@${aws_eip.tailscale.public_ip}"
+  value       = "ssh -i ~/.ssh/web_key ubuntu@${aws_eip.tailscale.public_ip}"
+}
+
+output "tailscale_status_command" {
+  description = "Command to check Tailscale status on the instance"
+  value       = "ssh -i ~/.ssh/web_key ubuntu@${aws_eip.tailscale.public_ip} 'sudo tailscale status'"
 }

@@ -1,36 +1,31 @@
 variable "aws_region" {
   description = "AWS region"
-  default     = "ap-southeast-1"
   type        = string
+  default     = "ap-southeast-1"
 }
 
 variable "vpc_tag_name" {
-  description = "Tag name of the aws vpc"
+  description = "VPC tag name"
   type        = string
-  default     = "your-vpc"
+  default     = "tailscale-vpc"
 }
 
 variable "aws_internet_gateway_tag_name" {
-  description = "Tag name of the aws ig"
+  description = "Internet gateway tag name"
   type        = string
-  default     = "your-igw"
+  default     = "tailscale-igw"
 }
 
 variable "aws_nat_gateway_name" {
-  description = "Nat gateway name"
+  description = "NAT gateway name"
   type        = string
-  default     = "your-igw"
+  default     = "tailscale-nat"
 }
 
 variable "aws_security_group_name" {
-  description = "Name of aws sg"
+  description = "Security group name"
   type        = string
-  default     = "your-sg"
-}
-
-variable "key_pair_name" {
-  description = "Name of the existing EC2 key pair"
-  type        = string
+  default     = "tailscale-sg"
 }
 
 variable "tailscale_auth_key" {
@@ -39,7 +34,20 @@ variable "tailscale_auth_key" {
   sensitive   = true
 }
 
-variable "key_name" {
-  description = "SSH key pair name"
+variable "ssh_public_key_path" {
+  description = "Path to SSH public key"
   type        = string
+  default     = "~/.ssh/web_key.pub"
+}
+
+variable "instance_type" {
+  description = "EC2 instance type"
+  type        = string
+  default     = "t2.micro"
+}
+
+variable "root_volume_size" {
+  description = "Root volume size in GB"
+  type        = number
+  default     = 20
 }

@@ -11,12 +11,11 @@ provider "aws" {
   region = var.aws_region
 }
 
-# You need to create key pair first
+# Create key pair
 resource "aws_key_pair" "web_key" {
   key_name   = "web_key"
-  public_key = file("~/.ssh/web_key.pub")
+  public_key = file(var.ssh_public_key_path)
 }
-
 
 # VPC
 resource "aws_vpc" "main" {
@@ -38,11 +37,11 @@ resource "aws_internet_gateway" "igw" {
 resource "aws_subnet" "public" {
   count                   = 2
   vpc_id                  = aws_vpc.main.id
-  cidr_block = cidrsubnet("10.0.0.0/16", 8, count.index)
+  cidr_block              = cidrsubnet("10.0.0.0/16", 8, count.index)
   map_public_ip_on_launch = true
-  availability_zone = ["ap-southeast-1a", "ap-southeast-1b"][count.index] # Adjust zone
+  availability_zone       = ["ap-southeast-1a", "ap-southeast-1b"][count.index]
   tags = {
-    Name = "terraform-public-${count.index}" # Adjust tags
+    Name = "terraform-public-${count.index}"
   }
 }
 
@@ -53,7 +52,7 @@ resource "aws_route_table" "public" {
     gateway_id = aws_internet_gateway.igw.id
   }
   tags = {
-    Name = "terraform-public-rt" # Adjust route tables
+    Name = "terraform-public-rt"
   }
 }
 
@@ -76,22 +75,36 @@ resource "aws_nat_gateway" "nat" {
 }
 
 resource "aws_security_group" "app_sg" {
-  name = var.aws_security_group_name
-  description = "Allow SSH"
+  name        = var.aws_security_group_name
+  description = "Allow SSH and Tailscale"
   vpc_id      = aws_vpc.main.id
 
   ingress {
-    from_port = 22
-    to_port   = 22
-    protocol  = "tcp"
+    description = "SSH"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "Tailscale"
+    from_port   = 41641
+    to_port     = 41641
+    protocol    = "udp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
-    from_port = 0
-    to_port   = 0
-    protocol  = "-1"
+    description = "All outbound"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = var.aws_security_group_name
   }
 }
 
@@ -120,24 +133,37 @@ locals {
   EOF
 }
 
+# Data source for latest Ubuntu AMI
+data "aws_ami" "ubuntu" {
+  most_recent = true
+  owners      = ["099720109477"] # Canonical
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+}
+
 # EC2 Instance
 resource "aws_instance" "web_server" {
-  ami = "ami-0b1e534a4ff9019e0" # Amazon Linux 2
-  instance_type = "t2.micro" # Adjust instance type
-  subnet_id = aws_subnet.public[0].id
-  security_groups = [aws_security_group.app_sg.id]
-
-  key_name  = var.key_pair_name
-  public_key = file("~/.ssh/web_key.pub")
+  ami                    = data.aws_ami.ubuntu.id
+  instance_type          = var.instance_type
+  subnet_id              = aws_subnet.public[0].id
+  vpc_security_group_ids = [aws_security_group.app_sg.id]
+  key_name               = aws_key_pair.web_key.key_name
 
   user_data = local.user_data
 
-  # Enable source/destination check disable for exit node
   source_dest_check = false
 
   root_block_device {
     volume_type = "gp3"
-    volume_size = 20
+    volume_size = var.root_volume_size
   }
 
   tags = {
