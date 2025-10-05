@@ -2,23 +2,6 @@
 
 This Terraform project provisions an AWS EC2 instance configured as a Tailscale exit node, along with all necessary networking infrastructure (VPC, subnets, security groups, etc.).
 
-### Prerequisites
-- [Terraform](https://www.terraform.io/downloads.html) >= 1.0 installed
-- [AWS CLI](https://aws.amazon.com/cli/) configured with appropriate credentials
-- An AWS account with permissions to create VPC, EC2, and networking resources
-- A [Tailscale account](https://login.tailscale.com/start)
-- SSH key pair generated locally
-
-### Project Structure
-
-```
-.
-├── main.tf           # Main infrastructure resources
-├── variables.tf      # Variable declarations
-├── outputs.tf        # Output definitions
-└── README.md         # This file
-```
-
 ### 🚀 Getting Started
 
 #### Step 1: Generate SSH Key Pair
