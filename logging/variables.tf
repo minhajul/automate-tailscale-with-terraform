@@ -12,3 +12,8 @@ variable "enable_log_encryption" {
   description = "Enable S3 bucket encryption"
   type        = bool
 }
+
+variable "aws_region" {
+  description = "AWS region"
+  type        = string
+}

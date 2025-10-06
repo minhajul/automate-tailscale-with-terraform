@@ -29,6 +29,11 @@ variable "security_group_id" {
   type        = string
 }
 
+variable "vpc_id" {
+  description = "VPC ID"
+  type        = string
+}
+
 variable "enable_logging" {
   description = "Enable logging"
   type        = bool
